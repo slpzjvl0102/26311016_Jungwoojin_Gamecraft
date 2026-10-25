@@ -1,0 +1,55 @@
+﻿아레나 서바이버 리소스 선정 안내
+
+1. 그래픽: Kenney Tiny Dungeon
+출처: https://kenney.nl/assets/tiny-dungeon
+License: CC0 (원본 License.txt 포함)
+16x16 pixel art, 개별 PNG 132개. 캐릭터, 무기, 바닥과 벽을 같은 스타일로 구성할 수 있습니다.
+Selected/Graphics는 바로 살펴볼 초기 배역 후보이며, 원본 PNG를 이름만 바꿔 복사했습니다.
+Player.png = tile_0096.png (갑옷 캐릭터)
+Chaser.png = tile_0121.png (유령)
+Charger.png = tile_0120.png (박쥐)
+Boss.png = tile_0110.png (붉은 몬스터)
+Sword.png = tile_0104.png (검)
+추격병과 돌진병을 몬스터로 표현하는 제안입니다. 기획서 자체는 변경하지 않았습니다.
+Boss는 일반 캐릭터와 같은 해상도입니다. 전용 대형 보스나 방향별 공격 Animation이 포함된 완성형 캐릭터 팩은 아닙니다.
+무기 회전과 이동/피격 연출로 시작하는 소규모 구현에 적합합니다.
+
+2. 배경 투명도 확인
+132개 Tiles를 검사해 74개에 완전 투명 pixel이 있음을 확인했습니다.
+선정한 5개 캐릭터/무기 PNG도 모두 투명 배경입니다. 추가 배경 제거가 필요하지 않습니다.
+나머지 58개 불투명 타일은 지형/구조물 타일로 원본을 보존했습니다.
+Preview.png의 파란색은 소개용 이미지의 배경입니다. 게임에서는 Preview가 아닌 Tiles의 개별 PNG를 사용하세요.
+Transparency.csv에 각 파일의 크기와 완전 투명 pixel 수를 기록했습니다.
+
+3. SFX 후보 (파일 이름/분류에 근거한 용도 제안, 청음 평가는 하지 않음)
+Kenney RPG Audio: https://kenney.nl/assets/rpg-audio
+- knifeSlice.ogg / knifeSlice2.ogg: 근접 공격
+- cloth1.ogg: 회피 시 옷자락 소리 후보
+Kenney Impact Sounds: https://kenney.nl/assets/impact-sounds
+- impactPunch_heavy_000.ogg: 피격
+- impactMetal_medium_000.ogg: 보스/금속 타격
+- footstep_concrete_000.ogg: 돌바닥 발소리
+Kenney Music Jingles: https://kenney.nl/assets/music-jingles
+- jingles_NES00.ogg / jingles_NES01.ogg: Wave 시작 또는 결과 화면용 비교 후보
+Jingles는 짧은 음악 효과입니다. 승리/패배의 구체적인 배정은 청음 후 결정하세요.
+위 Kenney 팩은 모두 CC0이며 각 폴더에 원본 License.txt가 있습니다.
+
+4. 전투 BGM 후보
+8-Bit Battle Loop - Wolfgang_ / Theodore Kerr
+출처: https://opengameart.org/content/8-bit-battle-loop
+다운로드: https://opengameart.org/sites/default/files/8BitBattleLoop_0.ogg
+License: CC0 (원본 게시물에서 확인)
+파일: BGM/8BitBattleLoop.ogg
+제작자가 짧은 8-bit battle loop로 소개한 곡입니다. Pixel art 전투의 BGM 후보로 선정했습니다.
+재생 청취 및 게임 내 Loop 경계 테스트는 수행하지 않았습니다.
+
+5. 사용 범위
+다운로드 및 압축 해제, PNG 투명도 검사를 완료했습니다.
+Unity 프로젝트 Import나 Scene 연결은 하지 않았습니다.
+원본 팩과 ZIP, 초기 선정본을 함께 보관했습니다. 실제 프로젝트에는 필요한 파일만 가져오시면 됩니다.
+효과음이 BGM에 묻히지 않는지와 반복 재생의 피로도는 실제 전투에서 확인하세요.
+
+6. 선택적 Credit 예시
+Graphics and sound effects: Kenney (https://kenney.nl)
+Music: 8-Bit Battle Loop by Theodore Kerr (Wolfgang_)
+원본 표기상 Credit은 필수가 아니지만 출처 관리를 위해 함께 보관합니다.
