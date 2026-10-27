@@ -23,7 +23,9 @@ class G2D2DContext : IDisposable
 		Factory = D2D1.D2D1CreateFactory<ID2D1Factory1>();
 		DWriteFactory = DWrite.DWriteCreateFactory<IDWriteFactory>();
 		RenderTarget = Factory.CreateHwndRenderTarget(
-			  new RenderTargetProperties()
+			  // ClientSize/PixelSize are pixels; G2AppBase owns viewport scaling.
+			  // Avoid applying desktop DPI a second time (clips the game at 125% DPI).
+			  new RenderTargetProperties { DpiX = 96.0f, DpiY = 96.0f }
 			, new HwndRenderTargetProperties
 			{
 				Hwnd = hwnd,
