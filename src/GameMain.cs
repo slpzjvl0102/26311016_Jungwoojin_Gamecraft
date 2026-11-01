@@ -13,6 +13,7 @@ class GameMain : G2AppBase
 	private Vector2 _playerPosition;
 	private readonly Dictionary<string, G2Texture> _textures = new();
 	private G2Font? _heading;
+	private G2Audio? _backgroundMusic;
 
 	public override System.Drawing.Size ScreenSize => GameGlobal.ScreenSize;
 	public override string GameName => GameGlobal.GameName;
@@ -29,6 +30,8 @@ class GameMain : G2AppBase
 		}
 		_heading = new G2Font("Malgun Gothic", 26);
 		_playerPosition = new Vector2(220, 330);
+		_backgroundMusic = new G2Audio("resource/audio/battle.wav");
+		_backgroundMusic.Play(isLooping: true);
 	}
 
 	protected override void Update()
@@ -93,6 +96,9 @@ class GameMain : G2AppBase
 		//---------------------------------------
 		// 게임 관련 객체를 해제합니다.
 		//---------------------------------------
+		_backgroundMusic?.Stop();
+		_backgroundMusic?.Dispose();
+		_backgroundMusic = null;
 		foreach (G2Texture texture in _textures.Values)
 		{
 			texture.Dispose();
