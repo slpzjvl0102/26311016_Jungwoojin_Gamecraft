@@ -17,4 +17,9 @@
     <PackageReference Include="Vortice.XInput" Version="3.8.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\resource\**\*"
+             Link="resource\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
