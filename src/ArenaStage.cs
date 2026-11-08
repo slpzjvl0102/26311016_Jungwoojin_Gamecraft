@@ -24,13 +24,15 @@ internal sealed class ArenaEnemy(EnemyKind kind, Vector2 position)
 internal sealed class ArenaStage
 {
     public const float Left = 96, Right = 864, Top = 160, Bottom = 544;
-    public const float PlayerRadius = 20, AttackReach = 76, AttackInterval = .4f;
+    public const float PlayerRadius = 20, AttackReach = 100, AttackHalfWidth = 6, AttackInterval = .4f;
+    public const float ThrustDuration = .22f, ThrustWindup = .08f;
+    private bool thrustHitPending;
     public const float DodgeDuration = .2f, DodgeCooldown = 1, HurtInvulnerability = .7f;
     public StageState State { get; private set; } = StageState.Title;
     private StageState beforePause;
     public Vector2 Player { get; private set; } = new(480, 352);
     public Vector2 Facing { get; private set; } = Vector2.UnitX;
-    public Vector2 SwingDirection { get; private set; } = Vector2.UnitX;
+    public Vector2 ThrustDirection { get; private set; } = Vector2.UnitX;
     private Vector2 dodgeDirection;
     public int Health { get; private set; } = 5;
     public int Wave { get; private set; }
@@ -38,7 +40,7 @@ internal sealed class ArenaStage
     public float Elapsed { get; private set; }
     public float PhaseTime { get; private set; }
     public float AttackCooldownLeft { get; private set; }
-    public float SwingTime { get; private set; }
+    public float ThrustTime { get; private set; }
     public float DodgeTime { get; private set; }
     public float DodgeCooldownLeft { get; private set; }
     public float Invulnerability { get; private set; }
@@ -49,10 +51,11 @@ internal sealed class ArenaStage
 
     public void Start()
     {
-        Player = new(480, 352); Facing = SwingDirection = Vector2.UnitX;
+        Player = new(480, 352); Facing = ThrustDirection = Vector2.UnitX;
         dodgeDirection = Vector2.Zero;
+        thrustHitPending = false;
         Health = 5; Wave = 1; Defeated = 0; Elapsed = 0;
-        AttackCooldownLeft = SwingTime = DodgeTime = DodgeCooldownLeft = Invulnerability = 0;
+        AttackCooldownLeft = ThrustTime = DodgeTime = DodgeCooldownLeft = Invulnerability = 0;
         PrepareWave();
     }
 
@@ -104,13 +107,14 @@ internal sealed class ArenaStage
     {
         Elapsed += dt;
         AttackCooldownLeft = Countdown(AttackCooldownLeft, dt);
-        SwingTime = Countdown(SwingTime, dt);
+        ThrustTime = Countdown(ThrustTime, dt);
         DodgeCooldownLeft = Countdown(DodgeCooldownLeft, dt);
         Invulnerability = Countdown(Invulnerability, dt);
         Facing = Direction(input.Aim - Player, Facing);
         Vector2 move = input.Move.LengthSquared() > 1 ? Vector2.Normalize(input.Move) : input.Move;
         if (input.Dodge && DodgeCooldownLeft <= 0)
         {
+            ThrustTime = 0; thrustHitPending = false;
             dodgeDirection = Direction(move, Facing);
             DodgeTime = DodgeDuration; DodgeCooldownLeft = DodgeCooldown;
             Sound?.Invoke("dodge");
@@ -118,6 +122,11 @@ internal sealed class ArenaStage
         bool dodging = DodgeTime > 0;
         Player = ClampToArena(Player + (dodging ? dodgeDirection * 650 : move * 220) * dt, PlayerRadius);
         if (!dodging && input.Attack && AttackCooldownLeft <= 0) Attack();
+        if (!dodging && thrustHitPending && ThrustTime <= ThrustDuration - ThrustWindup)
+        {
+            thrustHitPending = false;
+            ResolveThrust();
+        }
 
         if (State == StageState.Intermission)
         {
@@ -147,15 +156,24 @@ internal sealed class ArenaStage
 
     private void Attack()
     {
-        AttackCooldownLeft = AttackInterval; SwingTime = .16f; SwingDirection = Facing;
+        AttackCooldownLeft = AttackInterval; ThrustTime = ThrustDuration; ThrustDirection = Facing;
+        thrustHitPending = State == StageState.Fighting;
         Sound?.Invoke("attack");
+    }
+
+    private void ResolveThrust()
+    {
         if (State != StageState.Fighting) return;
         bool hit = false;
         for (int i = enemies.Count - 1; i >= 0; i--)
         {
             var enemy = enemies[i];
             Vector2 delta = enemy.Position - Player;
-            if (delta.Length() > AttackReach + enemy.Radius || Vector2.Dot(Direction(delta, Facing), Facing) < .45f) continue;
+            float forward = Vector2.Dot(delta, ThrustDirection);
+            if (forward < 0) continue;
+            Vector2 closest = ThrustDirection * Math.Clamp(forward, PlayerRadius, AttackReach);
+            float hitRadius = enemy.Radius + AttackHalfWidth;
+            if (Vector2.DistanceSquared(delta, closest) > hitRadius * hitRadius) continue;
             enemy.Health--; enemy.HitFlash = .15f; hit = true;
             if (enemy.Health <= 0) { enemies.RemoveAt(i); Defeated++; }
         }

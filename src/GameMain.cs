@@ -142,20 +142,36 @@ sealed class GameMain : G2AppBase
         }
         Sprite("player", stage.Player, 48, stage.Invulnerability > 0 && (int)(stage.Elapsed * 18) % 2 == 0 ? .4f : 1);
         if (stage.DodgeTime > 0) Ring(stage.Player, 30, Teal, 3);
-        Line(stage.Player + stage.Facing * 27, stage.Player + stage.Facing * 37, Teal, 4);
-        if (stage.SwingTime > 0)
-        {
-            Sector(stage.Player, stage.SwingDirection, ArenaStage.AttackReach, 1.104f, White);
-            Sprite("sword", stage.Player + stage.SwingDirection * 44, 32);
-        }
+        DrawSpear();
         DrawHud();
-        Text("WASD 이동   |   마우스 조준 / 왼쪽 클릭 공격   |   Space 회피   |   Esc 일시정지", 70, 602, 840, White, small);
+        Text("WASD 이동   |   마우스 조준 / 왼쪽 클릭 창 찌르기   |   Space 회피   |   Esc 일시정지", 70, 602, 840, White, small);
         if (stage.State == StageState.Spawning) Banner($"WAVE {stage.Wave}  ·  등장 위치를 확인하세요", $"{Math.Ceiling(stage.PhaseTime)}초 후 전투 시작");
         if (stage.State == StageState.Intermission) Banner($"WAVE {stage.Wave} CLEAR  ·  체력 +1 (최대 5)", $"다음 Wave까지 {Math.Ceiling(stage.PhaseTime)}초");
         if (stage.State == StageState.Title) Panel("아레나 서바이버", "3개의 Wave를 돌파하고 가디언을 처치하세요.", "시작  [Enter]", "종료");
         if (stage.State == StageState.Paused) Panel("일시정지", "공격 예고를 피하고, 청록색 회복 구간에 반격하세요.", "계속하기  [Enter / Esc]", "시작 화면으로");
         if (stage.State is StageState.Victory or StageState.Defeat)
             Panel(stage.State == StageState.Victory ? "승리 · STAGE CLEAR" : "패배 · 다시 도전하세요", $"플레이 시간 {TimeSpan.FromSeconds(stage.Elapsed):mm\\:ss}   /   처치 {stage.Defeated}마리", "다시하기  [Enter / R]", "시작 화면으로");
+    }
+    private void DrawSpear()
+    {
+        bool thrusting = stage.ThrustTime > 0;
+        Vector2 direction = thrusting ? stage.ThrustDirection : stage.Facing;
+        Vector2 side = new(-direction.Y, direction.X);
+        float age = ArenaStage.ThrustDuration - stage.ThrustTime;
+        float extension = !thrusting ? 0 : age < ArenaStage.ThrustWindup
+            ? age / ArenaStage.ThrustWindup
+            : stage.ThrustTime / (ArenaStage.ThrustDuration - ArenaStage.ThrustWindup);
+        float reach = 46 + (ArenaStage.AttackReach - 46) * Math.Clamp(extension, 0, 1);
+        Vector2 tip = stage.Player + direction * reach;
+        Vector2 neck = tip - direction * 15;
+        Vector2 tail = tip - direction * 60;
+        Line(tail, neck, Ink, 7);
+        Line(tail, neck, new Color4(.55f, .38f, .22f, 1), 4);
+        // A simple shaft and metal arrowhead, drawn using the existing Direct2D API.
+        Line(neck - side * 5, tip, White, 3);
+        Line(neck + side * 5, tip, White, 3);
+        Line(neck - side * 5, neck + side * 5, White, 3);
+        Line(neck - direction * 4 - side * 3, neck - direction * 4 + side * 3, GoldText, 3);
     }
     private void DrawHud()
     {

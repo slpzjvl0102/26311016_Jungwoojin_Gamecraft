@@ -44,16 +44,35 @@ stage.Enemies[1].Position = stage.Player + new Vector2(55, 10);
 stage.Enemies[2].Position = stage.Player - new Vector2(50, 0);
 var attack = new StageInput(Vector2.Zero, stage.Player + Vector2.UnitX, Attack: true);
 stage.Tick(.001f, attack);
+Check(stage.Enemies.All(e => e.Health == 2), "Thrust damage waits for full extension");
+Advance(stage, .09f, attack);
 Check(stage.Enemies[0].Health == 1 && stage.Enemies[1].Health == 1 && stage.Enemies[2].Health == 2, "Melee damages multiple front enemies but not rear enemies");
-Advance(stage, .38f, attack);
+Advance(stage, .29f, attack);
 Check(stage.Enemies.Count == 3, "Attack cannot repeat before 0.4 seconds");
-Advance(stage, .04f, attack);
+Advance(stage, .12f, attack);
 Check(stage.Enemies.Count == 1 && stage.Defeated == 2, "Held attack repeats after cooldown");
+
+stage = Fighting(); Park(stage);
+stage.Enemies[0].Position = stage.Player + new Vector2(70, 45);
+stage.Enemies[1].Position = stage.Player + new Vector2(130, 0);
+stage.Enemies[2].Position = stage.Player + new Vector2(100, 0);
+stage.Tick(.001f, new(Vector2.Zero, stage.Player + Vector2.UnitX, Attack: true));
+Advance(stage, .1f, new(Vector2.Zero, stage.Player + Vector2.UnitY));
+Check(stage.Enemies[0].Health == 2 && stage.Enemies[1].Health == 2 && stage.Enemies[2].Health == 1, "Narrow thrust excludes side/out-of-reach targets and locks attack direction");
+Advance(stage, .2f);
+Check(stage.Enemies[2].Health == 1, "Retracting spear cannot damage a target twice");
+
+stage = Fighting(); Park(stage);
+stage.Enemies[0].Position = stage.Player + new Vector2(50, 0);
+stage.Tick(.001f, new(Vector2.Zero, stage.Player + Vector2.UnitX, Attack: true));
+stage.Tick(.001f, new(Vector2.Zero, stage.Player + Vector2.UnitX, Dodge: true));
+Advance(stage, .1f);
+Check(stage.Enemies[0].Health == 2 && stage.ThrustTime == 0, "Dodge cancels an unfinished thrust");
 
 stage = Fighting(); Park(stage); origin = stage.Player;
 stage.Tick(1f / 120, new(Vector2.Zero, origin + Vector2.UnitX, Dodge: true));
 stage.Tick(.001f, new(Vector2.Zero, origin + Vector2.UnitX, Attack: true));
-Check(stage.SwingTime == 0 && stage.AttackCooldownLeft == 0, "Attacking is disabled during dodge (approved design rule)");
+Check(stage.ThrustTime == 0 && stage.AttackCooldownLeft == 0, "Attacking is disabled during dodge (approved design rule)");
 Advance(stage, .19f);
 Check(stage.Player.X > origin.X + 120 && stage.DodgeCooldownLeft > .79f, "Stationary dodge follows aim for 0.2 seconds with one-second cooldown");
 Advance(stage, .03f); origin = stage.Player;
