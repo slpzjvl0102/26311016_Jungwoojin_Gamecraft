@@ -26,6 +26,7 @@ internal sealed class ArenaStage
     public const float Left = 96, Right = 864, Top = 160, Bottom = 544;
     public const float PlayerRadius = 20, AttackReach = 100, AttackHalfWidth = 6, AttackInterval = .4f;
     public const float ThrustDuration = .22f, ThrustWindup = .08f;
+    public const float SpearHandOffset = 12;
     private bool thrustHitPending;
     public const float DodgeDuration = .2f, DodgeCooldown = 1, HurtInvulnerability = .7f;
     public StageState State { get; private set; } = StageState.Title;
@@ -86,6 +87,7 @@ internal sealed class ArenaStage
 
     public static Vector2 ClampToArena(Vector2 p, float radius) => new(
         Math.Clamp(p.X, Left + radius, Right - radius), Math.Clamp(p.Y, Top + radius, Bottom - radius));
+    public Vector2 SpearOrigin(Vector2 direction) => Player + new Vector2(-direction.Y, direction.X) * SpearHandOffset;
     private static Vector2 Direction(Vector2 delta, Vector2 fallback) => delta.LengthSquared() > .001f ? Vector2.Normalize(delta) : fallback;
     private static float Countdown(float value, float dt) => Math.Max(0, value - dt);
 
@@ -168,7 +170,7 @@ internal sealed class ArenaStage
         for (int i = enemies.Count - 1; i >= 0; i--)
         {
             var enemy = enemies[i];
-            Vector2 delta = enemy.Position - Player;
+            Vector2 delta = enemy.Position - SpearOrigin(ThrustDirection);
             float forward = Vector2.Dot(delta, ThrustDirection);
             if (forward < 0) continue;
             Vector2 closest = ThrustDirection * Math.Clamp(forward, PlayerRadius, AttackReach);

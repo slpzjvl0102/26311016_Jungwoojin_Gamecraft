@@ -129,4 +129,15 @@ elapsed = stage.Elapsed; Advance(stage, 2);
 Check(stage.Elapsed == elapsed, "Result freezes play time");
 stage.Start(); Check(stage.State == StageState.Spawning && stage.Health == 5, "Restart also works after defeat");
 stage.ReturnToTitle(); Check(stage.State == StageState.Title && stage.Enemies.Count == 0, "Return to title clears enemies");
+foreach (var facing in new[] { Vector2.UnitX, -Vector2.UnitX, Vector2.UnitY, -Vector2.UnitY, Vector2.Normalize(Vector2.One) })
+{
+    stage = Fighting(); Park(stage);
+    Vector2 side = new(-facing.Y, facing.X);
+    stage.Enemies[0].Position = stage.Player + facing * 70 + side * 35;
+    stage.Enemies[1].Position = stage.Player + facing * 70 - side * 20;
+    stage.Tick(.001f, new(Vector2.Zero, stage.Player + facing, Attack: true));
+    Advance(stage, .1f);
+    Check(stage.Enemies[0].Health == 1 && stage.Enemies[1].Health == 2,
+        $"Hand-offset hitbox follows spear for direction {facing}");
+}
 Console.WriteLine($"{passed} checks passed.");

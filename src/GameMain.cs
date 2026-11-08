@@ -162,7 +162,7 @@ sealed class GameMain : G2AppBase
             ? age / ArenaStage.ThrustWindup
             : stage.ThrustTime / (ArenaStage.ThrustDuration - ArenaStage.ThrustWindup);
         float reach = 46 + (ArenaStage.AttackReach - 46) * Math.Clamp(extension, 0, 1);
-        Vector2 tip = stage.Player + direction * reach;
+        Vector2 tip = stage.SpearOrigin(direction) + direction * reach;
         Vector2 neck = tip - direction * 15;
         Vector2 tail = tip - direction * 60;
         Line(tail, neck, Ink, 7);
