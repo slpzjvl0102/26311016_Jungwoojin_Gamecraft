@@ -167,9 +167,17 @@ sealed class GameMain : G2AppBase
         Vector2 tail = tip - direction * 60;
         Line(tail, neck, Ink, 7);
         Line(tail, neck, new Color4(.55f, .38f, .22f, 1), 4);
-        // Solid metal spearhead; no collision/debug outline is rendered.
+        // Two steel facets, a dark silhouette and a narrow central highlight.
+        Color4 steelShadow = new(.32f, .36f, .40f, 1);
+        Color4 steelLight = new(.64f, .69f, .73f, 1);
+        Color4 steelEdge = new(.82f, .85f, .87f, 1);
+        Line(neck - side * 5, tip, Ink, 3);
+        Line(neck + side * 5, tip, Ink, 3);
+        Line(neck - side * 5, neck + side * 5, Ink, 3);
         for (int offset = -5; offset <= 5; offset++)
-            Line(neck + side * offset, tip, White, 1.5f);
+            Line(neck + side * offset, tip, offset < 0 ? steelShadow : steelLight, 1.5f);
+        Line(neck, tip, steelEdge, 1);
+        Line(neck - side * 4, neck + side * 4, steelShadow, 2);
         Line(neck - direction * 4 - side * 3, neck - direction * 4 + side * 3, GoldText, 3);
     }
     private void DrawHud()
