@@ -140,9 +140,9 @@ sealed class GameMain : G2AppBase
             Box(enemy.Position.X - w / 2, enemy.Position.Y - enemy.Radius - 12, w, 5, Ink);
             Box(enemy.Position.X - w / 2, enemy.Position.Y - enemy.Radius - 12, w * enemy.Health / enemy.MaxHealth, 5, Red);
         }
+        DrawSpear();
         Sprite("player", stage.Player, 48, stage.Invulnerability > 0 && (int)(stage.Elapsed * 18) % 2 == 0 ? .4f : 1);
         if (stage.DodgeTime > 0) Ring(stage.Player, 30, Teal, 3);
-        DrawSpear();
         DrawHud();
         Text("WASD 이동   |   마우스 조준 / 왼쪽 클릭 창 찌르기   |   Space 회피   |   Esc 일시정지", 70, 602, 840, White, small);
         if (stage.State == StageState.Spawning) Banner($"WAVE {stage.Wave}  ·  등장 위치를 확인하세요", $"{Math.Ceiling(stage.PhaseTime)}초 후 전투 시작");
@@ -167,10 +167,9 @@ sealed class GameMain : G2AppBase
         Vector2 tail = tip - direction * 60;
         Line(tail, neck, Ink, 7);
         Line(tail, neck, new Color4(.55f, .38f, .22f, 1), 4);
-        // A simple shaft and metal arrowhead, drawn using the existing Direct2D API.
-        Line(neck - side * 5, tip, White, 3);
-        Line(neck + side * 5, tip, White, 3);
-        Line(neck - side * 5, neck + side * 5, White, 3);
+        // Solid metal spearhead; no collision/debug outline is rendered.
+        for (int offset = -5; offset <= 5; offset++)
+            Line(neck + side * offset, tip, White, 1.5f);
         Line(neck - direction * 4 - side * 3, neck - direction * 4 + side * 3, GoldText, 3);
     }
     private void DrawHud()
@@ -190,7 +189,9 @@ sealed class GameMain : G2AppBase
     private void Panel(string heading, string detail, string primary, string secondary)
     {
         Box(0, 112, 960, 480, new Color4(.015f, .025f, .045f, .80f));
-        Box(185, 204, 590, 304, Ink); Box(185, 204, 590, 3, Gold);
+        Box(185, 204, 590, 304, Ink);
+        brush.Color = White;
+        RenderTarget.DrawRectangle(new Rect(185, 204, 590, 304), brush, 1.5f);
         Text(heading, 222, 235, 530, White, title);
         Text(detail, 222, 294, 530, Gold, small);
         Button(366, primary); Button(426, secondary);
