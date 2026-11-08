@@ -13,9 +13,9 @@ internal static class AppMain
 	{
 		ApplicationConfiguration.Initialize();
 
-		using G2AppBase app = args.Contains("--original")
-			? new GameMain()
-			: new ResourcePreview(args.Contains("--gallery"));
+		using G2AppBase app = args.Contains("--preview") || args.Contains("--gallery")
+			? new ResourcePreview(args.Contains("--gallery"))
+			: new GameMain();
 		app.Run();
 	}
 #endif

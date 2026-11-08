@@ -27,10 +27,12 @@ class G2InputContext : IDisposable
 	private readonly byte[] _keyCur = new byte[MaxInputKey];
 	private readonly byte[] _keyOld = new byte[MaxInputKey];
 	private readonly InputState[] _keyMap = new InputState[MaxInputKey];
+	private readonly bool[] _keyDownPending = new bool[MaxInputKey];
 
 	private readonly byte[] _buttonCur = new byte[MaxInputButton];
 	private readonly byte[] _buttonOld = new byte[MaxInputButton];
 	private readonly InputState[] _buttonMap = new InputState[MaxInputButton];
+	private readonly bool[] _buttonDownPending = new bool[MaxInputButton];
 
 	private readonly Form _targetForm;
 
@@ -63,6 +65,9 @@ class G2InputContext : IDisposable
 		}
 		_targetForm = form ?? throw new ArgumentNullException(nameof(form));
 		_targetForm.MouseWheel += OnMouseWheel;
+		_targetForm.MouseDown += OnMouseDown;
+		_targetForm.KeyDown += OnKeyDown;
+		_targetForm.PreviewKeyDown += OnPreviewKeyDown;
 		_mouseOldPosition = _mousePosition;
 		Instance = this;
 	}
@@ -85,6 +90,9 @@ class G2InputContext : IDisposable
 			{
 				_keyCur[i] = (_keyCur[i] & 0x80) != 0 ? (byte)1 : (byte)0;
 				_keyMap[i] = GetInputState(_keyOld[i], _keyCur[i]);
+				// A short tap can begin and end between two render frames.
+				if (_keyDownPending[i]) _keyMap[i] = InputState.Down;
+				_keyDownPending[i] = false;
 			}
 		}
 		else
@@ -105,6 +113,8 @@ class G2InputContext : IDisposable
 		for (int i = 0; i < MaxInputButton; i++)
 		{
 			_buttonMap[i] = GetInputState(_buttonOld[i],_buttonCur[i]);
+			if (_buttonDownPending[i]) _buttonMap[i] = InputState.Down;
+			_buttonDownPending[i] = false;
 		}
 	}
 
@@ -122,7 +132,9 @@ class G2InputContext : IDisposable
 		var scaleX = G2AppBase.ScreenScaleX;
 		var scaleY = G2AppBase.ScreenScaleY;
 
-		_mousePosition = new PointF(point.X / scaleX, point.Y / scaleY);
+		_mousePosition = new PointF(
+			(point.X - G2AppBase.Instance!.ViewportOffsetX) / scaleX,
+			(point.Y - G2AppBase.Instance!.ViewportOffsetY) / scaleY);
 		_mouseDelta = new PointF(_mousePosition.X - _mouseOldPosition.X, _mousePosition.Y - _mouseOldPosition.Y);
 		_mouseOldPosition = _mousePosition;
 	}
@@ -147,6 +159,23 @@ class G2InputContext : IDisposable
 	private void OnMouseWheel(object? sender, MouseEventArgs e)
 	{
 		_wheelAccumulated += e.Delta;
+	}
+
+	private void OnMouseDown(object? sender, MouseEventArgs e)
+	{
+		if (e.Button is MouseButtons.Left or MouseButtons.Right or MouseButtons.Middle or MouseButtons.XButton1 or MouseButtons.XButton2)
+			_buttonDownPending[GetButtonIndex(e.Button)] = true;
+	}
+
+	private void OnPreviewKeyDown(object? sender, PreviewKeyDownEventArgs e)
+	{
+		if (e.KeyCode is Keys.Enter or Keys.Escape) e.IsInputKey = true;
+	}
+
+	private void OnKeyDown(object? sender, KeyEventArgs e)
+	{
+		int index = GetKeyIndex(e.KeyCode);
+		if (_keyCur[index] == 0) _keyDownPending[index] = true;
 	}
 
 	public bool IsKeyDown(Keys key)
@@ -194,9 +223,11 @@ class G2InputContext : IDisposable
 		Array.Clear(_keyCur, 0, MaxInputKey);
 		Array.Clear(_keyOld, 0, MaxInputKey);
 		Array.Clear(_keyMap, 0, MaxInputKey);
+		Array.Clear(_keyDownPending);
 		Array.Clear(_buttonCur, 0, MaxInputButton);
 		Array.Clear(_buttonOld, 0, MaxInputButton);
 		Array.Clear(_buttonMap, 0, MaxInputButton);
+		Array.Clear(_buttonDownPending);
 		MouseWheelDelta = 0;
 		_wheelAccumulated = 0;
 		UpdateMousePosition();
@@ -225,6 +256,9 @@ class G2InputContext : IDisposable
 	public void Dispose()
 	{
 		_targetForm.MouseWheel -= OnMouseWheel;
+		_targetForm.MouseDown -= OnMouseDown;
+		_targetForm.KeyDown -= OnKeyDown;
+		_targetForm.PreviewKeyDown -= OnPreviewKeyDown;
 		Instance = null;
 	}
 }
